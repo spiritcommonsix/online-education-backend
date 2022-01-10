@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coc.eduservice.mapper.EduCourseMapper">
+    <!-- 教师端获取课程列表，有点赞数，收藏数，课程状态等   -->
+    <select id="getCourseInfoByTeacher" parameterType="HashMap" resultType="HashMap">
+        select fc.course_id,fc.course_title,fc.like_num,fc.collect_num,fc.gmt_create,es.status_name from(
+        select t1.*,count(ecc.user_id) as collect_num from
+        (select ec.course_id,ec.course_title,count(lc.user_id) as like_num,ec.gmt_create,ec.status_id
+        from edu_course ec
+        LEFT JOIN like_course lc
+        using(course_id)
+        <if test="userId!=null">
+            <where>ec.user_id=#{userId}</where>
+        </if>
+        group by course_id
+        ) t1
+        LEFT JOIN
+        edu_course_collect ecc
+        using(course_id)
+        group by course_id
+        ) fc INNER JOIN edu_course_status es
+        using(status_id)
+        <if test="otherQuery != null">
+            <where>
+                course_id in
+                <foreach collection="otherQuery" item ="item" index="i" open="(" close=")" separator=",">
+                    #{item.courseId}
+                </foreach>
+            </where>
+        </if>
+    </select>
+
+    <select id="getCourseInfoByStudent" parameterType="HashMap" resultType="HashMap">
+        select course_id,course_title,course_cover,gmt_create,user_name from edu_course INNER JOIN sys_user_table using(user_id)
+        <where>
+            course_id != '0'
+            and status_id='1381482894559543297'
+            <if test="subjectId!=null">
+                and subject_id in (select subject_id from edu_subject where parent_id=#{subjectId})
+            </if>
+            <if test="keyWord!=null">
+                and (course_title like '%${keyWord}%' or user_name like '%${keyWord}%')
+            </if>
+        </where>
+    </select>
+
+    <select id="testQuery" parameterType="HashMap" resultType="HashMap">
+        select * from edu_course
+        <if test="ids != null and ids.size > 0 ">
+            <where>
+                course_id in
+                <foreach collection="ids" item ="id" index="i" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </where>
+        </if>
+        <where>
+            and user_id=#{user_name}
+        </where>
+    </select>
+
+    <!--  需要审核的课程列表，展现发布者，发布时间，章节数，小节数  -->
+    <select id="getInspectList" resultType="HashMap">
+        select course_id,course_title,user_name, gmt_create,  chapterNum, videoNum
+        from
+        (
+        select  course_title,gmt_create,user_id,t3.* from
+        edu_course ec inner join
+        (
+        select course_id, t2.chapterNum, t1.videoNum
+        from (
+        select course_id, count(video_id) as videoNum
+        from (edu_course left join edu_chapter using (course_id))
+        left join edu_video using (chapter_id)
+        group by course_id
+        ) t1
+        inner join
+        (
+        select course_id, count(chapter_id) as chapterNum
+        from edu_course
+        left join edu_chapter using (course_id)
+        group by course_id
+        ) t2 using (course_id)
+        ) t3 using(course_id)
+        ) t4 inner join sys_user_table using (user_id)
+        where course_id != '0'
+        and course_id in
+        (
+        select edu_course.course_id
+        from edu_course
+        where status_id='1381482893678739458'
+        )
+    </select>
+    <select id="getCollectCourse" resultType="Map" parameterType="String">
+        select t1.course_id, course_title, course_cover, gmt_create,user_name
+        from
+        (
+            select course_id,course_title,course_cover,edu_course_collect.gmt_create,edu_course.user_id
+            from
+        (
+            edu_course inner join edu_course_collect using (course_id)
+        ) where edu_course_collect.user_id=#{userId}
+        ) t1 left join sys_user_table using (user_id)
+    </select>
+
+</mapper>
+
+<!--
+
+                <if test="value!=null">
+                    <where>edu_course.user_id=#{value }</where>
+                </if>
+-->

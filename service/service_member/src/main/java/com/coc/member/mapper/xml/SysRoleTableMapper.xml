@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coc.member.mapper.SysRoleTableMapper">
+    <select id="getRoleListByUserId" parameterType="String" resultType="com.coc.member.entity.SysRoleTable">
+        select *
+        from sys_role_table where role_id in
+        (
+        select role_id
+        from sys_role_user_table where user_id=#{userId}
+        )
+    </select>
+</mapper>

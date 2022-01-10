@@ -1,0 +1,13 @@
+package com.coc.servicebase.exception;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MyServiceException extends RuntimeException {
+    private Integer code;
+    private String msg;
+}

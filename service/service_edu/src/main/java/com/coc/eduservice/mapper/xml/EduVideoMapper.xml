@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coc.eduservice.mapper.EduVideoMapper">
+
+    <select id="canGetAuth" resultType="Integer">
+        select count(1)
+        from (edu_video inner join edu_chapter using (chapter_id)) left join edu_course using (course_id)
+        where (edu_course.user_id=#{userId} or is_free=1 or course_price=0 or course_id in (select course_id from `order` where `order`.user_id=#{userId}))
+        and video_id=#{videoId}
+    </select>
+</mapper>

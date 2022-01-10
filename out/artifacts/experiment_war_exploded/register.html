@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.min.js"></script>
+    <script src="js/element-ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+	<script src="js/jquery-3.5.1.min.js"></script>
+	<script src="js/securityCode.js"></script>
+    <link rel="stylesheet" href="css/element-ui.css">
+</head>
+
+
+<body>
+    <div id="app" class="register-box">
+        <el-form ref="form" :model="registerInfo" label-width=80px>
+            <el-button type="text" @click="goToLogin">←返回登陆</el-button>
+            <h3 class="title">注册</h3>
+            <el-form-item label="手机号">
+                <el-input v-model="registerInfo.telNumber" placeholder="注册手机号" prefix-icon="el-icon-phone"></el-input>
+            </el-form-item>
+            <el-form-item label="用户名">
+                <el-input v-model="registerInfo.userName" placeholder="请输入用户名" prefix-icon="el-icon-user-solid">
+                </el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+                <el-input type="password" v-model="registerInfo.passWord" placeholder="请输入密码"
+                    prefix-icon="el-icon-lock"></el-input>
+            </el-form-item>
+            <el-form-item label="确认密码">
+                <el-input type="password" v-model="confirmPwd" placeholder="确认密码" prefix-icon="el-icon-lock">
+                </el-input>
+            </el-form-item>
+			<el-form-item label="验证码">
+			<el-row>
+				<el-col :span="6">
+					<el-input v-model="inputSecurityCode"  placeholder="验证码" prefix-icon="el-icon-lock"></el-input>
+				</el-col>
+				<el-col :span="2"></el-col>
+				<el-col :span="6">
+					<canvas id="security-code-img"></canvas>
+				</el-col>
+			</el-row>
+			
+			</el-form-item>
+            <el-form-item>
+                <el-button :loading="loading" type="primary" style="width:100%;" @click="submitRegister">
+                    确认注册
+                </el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+
+</body>
+
+<script type="text/javascript">
+
+    let vue = new Vue({
+        el: '#app',
+        data: {
+            loading: false,
+            confirmPwd: '',
+            registerInfo: {
+                userName: '',
+                passWord: '',
+                telNumber: ''
+            },
+			inputSecurityCode:'',
+			newSecurityCode:''
+        },
+        created() {
+            this.init();
+        },
+        methods: {
+            init() {
+				
+				console.log(this.newSecurityCode)
+            },
+            //前往登录
+            goToLogin() {
+                alert('前往登录')
+            },
+            //校验表单
+            checkForm() {
+				console.log(this.newSecurityCode)
+                if (!(/^1[3|4|5|7|8][0-9]{9}$/.test(this.registerInfo.telNumber))) {
+                    warningMsg(this.$message, "手机号填写错误")
+                    return false;
+                }
+                if (this.registerInfo.passWord.length < 8 || this.registerInfo.passWord.length > 12) {
+                    warningMsg(this.$message, "请输入8-12位密码")
+                    return false;
+                }
+                if (this.registerInfo.passWord != this.confirmPwd) {
+                    warningMsg(this.$message, "确认密码与原密码不一致")
+                    return false;
+                }
+				if (this.inputSecurityCode!=this.newSecurityCode){
+					warningMsg(this.$message, "验证码错误")
+                    return false;
+				}
+                return true;
+            },
+            //实现注册
+            submitRegister() {
+                if (!this.checkForm())
+                    return
+                axios.post("/register",this.registerInfo).then(rs=>{
+                    console.log(rs);
+                })
+            }
+        },
+    });
+	$(
+		function () 
+		{ 
+			var securityCode=initCode();
+			vue.newSecurityCode=securityCode;
+			drawCode("security-code-img",securityCode); 
+			$("#security-code-img").click(
+				function () {securityCode=initCode();drawCode("security-code-img",securityCode);
+				vue.newSecurityCode=securityCode;
+				}
+			) ;
+		}
+	)
+</script>
+
+</html>
+<style>
+    .register-box {
+        position: absolute;
+        left: 0;
+        right: 0;
+        width: 520px;
+        max-width: 100%;
+        padding: 35px 35px 15px 35px;
+        margin: 50px auto;
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .title {
+        font-size: 26px;
+        font-weight: 400;
+        color: #606266;
+        margin: 0px auto 40px auto;
+        text-align: center;
+        font-weight: bold;
+    }
+	#security-code-img{width: 100px;height: 40px;display: inline-block;background-color: aliceblue}
+    #security-code-img:hover{cursor: pointer;}
+</style>
